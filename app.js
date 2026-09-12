@@ -13,7 +13,8 @@ const WASM_URL =
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm";
 
 
-const $ = selector => document.querySelector(selector);
+const $ = selector =>
+  document.querySelector(selector);
 
 
 const video = $("#video");
@@ -24,19 +25,32 @@ const debug = $("#debug");
 
 const startButton = $("#start");
 const calibrateButton = $("#calibrate");
-const recalibrateButton = $("#recalibrate");
+
+const recalibrateButton =
+  $("#recalibrate");
+
 const stopButton = $("#stop");
 
-const threshold = $("#threshold");
-const thresholdValue = $("#thresholdValue");
+const threshold =
+  $("#threshold");
 
-const delay = $("#delay");
-const delayValue = $("#delayValue");
+const thresholdValue =
+  $("#thresholdValue");
 
-const status = $("#status");
+const delay =
+  $("#delay");
 
-const alarmFile = $("#alarmFile");
-const audioStatus = $("#audioStatus");
+const delayValue =
+  $("#delayValue");
+
+const status =
+  $("#status");
+
+const alarmFile =
+  $("#alarmFile");
+
+const audioStatus =
+  $("#audioStatus");
 
 
 let detector = null;
@@ -45,7 +59,11 @@ let stream = null;
 let running = false;
 
 let safeFaceWidth =
-  Number(localStorage.getItem("safeFaceWidth")) || null;
+  Number(
+    localStorage.getItem(
+      "safeFaceWidth"
+    )
+  ) || null;
 
 let currentFaceWidth = null;
 
@@ -53,9 +71,8 @@ let candidateSince = 0;
 
 let alarmRunning = false;
 
-let audioBlob = null;
-let audioURL = null;
 let alarmAudio = null;
+let audioURL = null;
 
 let audioContext = null;
 
@@ -64,51 +81,80 @@ let wakeLock = null;
 let lastVideoTime = -1;
 let lastDetection = 0;
 
+let fallbackInterval = null;
+
 
 /*
- * UI controls
+ * Settings
  */
 
-threshold.addEventListener("input", () => {
-  thresholdValue.textContent =
-    `${threshold.value}%`;
-});
+threshold.addEventListener(
+  "input",
+  () => {
+
+    thresholdValue.textContent =
+      `${threshold.value}%`;
+  }
+);
 
 
-delay.addEventListener("input", () => {
-  delayValue.textContent =
-    `${(Number(delay.value) / 1000).toFixed(1)}s`;
-});
+delay.addEventListener(
+  "input",
+  () => {
+
+    delayValue.textContent =
+      `${(
+        Number(delay.value) / 1000
+      ).toFixed(1)}s`;
+  }
+);
 
 
 /*
  * IndexedDB
- *
- * Used to keep the custom alarm recording
- * on the device.
  */
 
 async function openDatabase() {
-  return new Promise((resolve, reject) => {
 
-    const request =
-      indexedDB.open("tv-distance-alarm", 1);
+  return new Promise(
+    (resolve, reject) => {
 
-    request.onupgradeneeded = () => {
+      const request =
+        indexedDB.open(
+          "tv-distance-alarm",
+          1
+        );
 
-      request.result.createObjectStore(
-        "settings"
-      );
-    };
 
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
+      request.onupgradeneeded =
+        () => {
 
-    request.onerror = () => {
-      reject(request.error);
-    };
-  });
+          request.result
+            .createObjectStore(
+              "settings"
+            );
+        };
+
+
+      request.onsuccess =
+        () => {
+
+          resolve(
+            request.result
+          );
+        };
+
+
+      request.onerror =
+        () => {
+
+          reject(
+            request.error
+          );
+        };
+
+    }
+  );
 }
 
 
@@ -117,24 +163,39 @@ async function saveAlarm(blob) {
   const database =
     await openDatabase();
 
-  await new Promise((resolve, reject) => {
 
-    const transaction =
-      database.transaction(
-        "settings",
-        "readwrite"
-      );
+  await new Promise(
+    (resolve, reject) => {
 
-    transaction
-      .objectStore("settings")
-      .put(blob, "alarm");
+      const transaction =
+        database.transaction(
+          "settings",
+          "readwrite"
+        );
 
-    transaction.oncomplete =
-      resolve;
 
-    transaction.onerror =
-      () => reject(transaction.error);
-  });
+      transaction
+        .objectStore("settings")
+        .put(
+          blob,
+          "alarm"
+        );
+
+
+      transaction.oncomplete =
+        resolve;
+
+
+      transaction.onerror =
+        () => {
+
+          reject(
+            transaction.error
+          );
+        };
+
+    }
+  );
 }
 
 
@@ -143,60 +204,83 @@ async function loadAlarm() {
   const database =
     await openDatabase();
 
-  return new Promise((resolve, reject) => {
 
-    const transaction =
-      database.transaction(
-        "settings",
-        "readonly"
-      );
+  return new Promise(
+    (resolve, reject) => {
 
-    const request =
-      transaction
-        .objectStore("settings")
-        .get("alarm");
+      const transaction =
+        database.transaction(
+          "settings",
+          "readonly"
+        );
 
-    request.onsuccess = () => {
-      resolve(request.result || null);
-    };
 
-    request.onerror = () => {
-      reject(request.error);
-    };
-  });
+      const request =
+        transaction
+          .objectStore("settings")
+          .get("alarm");
+
+
+      request.onsuccess =
+        () => {
+
+          resolve(
+            request.result || null
+          );
+        };
+
+
+      request.onerror =
+        () => {
+
+          reject(
+            request.error
+          );
+        };
+
+    }
+  );
 }
 
 
 /*
- * Custom alarm
+ * Alarm audio
  */
 
-function setAlarmAudio(blob) {
+function setAlarmAudio(
+  blob,
+  filename = "Saved alarm"
+) {
 
   if (audioURL) {
-    URL.revokeObjectURL(audioURL);
+
+    URL.revokeObjectURL(
+      audioURL
+    );
   }
 
-  audioBlob = blob;
 
   audioURL =
-    blob
-      ? URL.createObjectURL(blob)
-      : null;
+    URL.createObjectURL(
+      blob
+    );
+
 
   alarmAudio =
-    blob
-      ? new Audio(audioURL)
-      : null;
+    new Audio(
+      audioURL
+    );
 
-  if (alarmAudio) {
 
-    alarmAudio.preload = "auto";
-    alarmAudio.loop = true;
+  alarmAudio.preload =
+    "auto";
 
-    audioStatus.textContent =
-      "Custom alarm loaded. Your shouting is now the official warning system.";
-  }
+  alarmAudio.loop =
+    true;
+
+
+  audioStatus.textContent =
+    `Alarm loaded: ${filename}`;
 }
 
 
@@ -207,13 +291,31 @@ alarmFile.addEventListener(
     const file =
       alarmFile.files[0];
 
+
     if (!file) {
       return;
     }
 
-    await saveAlarm(file);
 
-    setAlarmAudio(file);
+    try {
+
+      await saveAlarm(file);
+
+
+      setAlarmAudio(
+        file,
+        file.name
+      );
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      audioStatus.textContent =
+        "Could not save alarm audio.";
+    }
+
   }
 );
 
@@ -225,29 +327,39 @@ alarmFile.addEventListener(
 async function initializeDetector() {
 
   status.textContent =
-    "Loading face detector…";
+    "Loading face detector...";
+
 
   const vision =
-    await FilesetResolver.forVisionTasks(
-      WASM_URL
-    );
+    await FilesetResolver
+      .forVisionTasks(
+        WASM_URL
+      );
+
 
   detector =
-    await FaceDetector.createFromOptions(
-      vision,
-      {
-        baseOptions: {
-          modelAssetPath: MODEL_URL,
-          delegate: "CPU"
-        },
+    await FaceDetector
+      .createFromOptions(
+        vision,
+        {
+          baseOptions: {
+            modelAssetPath:
+              MODEL_URL,
 
-        runningMode: "VIDEO",
+            delegate:
+              "CPU"
+          },
 
-        minDetectionConfidence: 0.5,
+          runningMode:
+            "VIDEO",
 
-        minSuppressionThreshold: 0.3
-      }
-    );
+          minDetectionConfidence:
+            0.5,
+
+          minSuppressionThreshold:
+            0.3
+        }
+      );
 }
 
 
@@ -259,53 +371,56 @@ async function startCamera() {
 
   if (
     !navigator.mediaDevices ||
-    !navigator.mediaDevices.getUserMedia
+    !navigator.mediaDevices
+      .getUserMedia
   ) {
 
     throw new Error(
-      "Camera access is not supported by this browser."
+      "Camera access is not supported."
     );
   }
 
 
   stream =
-    await navigator.mediaDevices.getUserMedia(
-      {
-        video: {
-          facingMode: {
-            ideal: "user"
+    await navigator.mediaDevices
+      .getUserMedia(
+        {
+          video: {
+            facingMode: {
+              ideal: "user"
+            },
+
+            width: {
+              ideal: 640,
+              max: 960
+            },
+
+            height: {
+              ideal: 480,
+              max: 720
+            },
+
+            frameRate: {
+              ideal: 15,
+              max: 20
+            }
           },
 
-          width: {
-            ideal: 640,
-            max: 960
-          },
-
-          height: {
-            ideal: 480,
-            max: 720
-          },
-
-          frameRate: {
-            ideal: 15,
-            max: 20
-          }
-        },
-
-        audio: false
-      }
-    );
+          audio: false
+        }
+      );
 
 
-  video.srcObject = stream;
+  video.srcObject =
+    stream;
+
 
   await video.play();
 
 
   /*
-   * Create AudioContext from the Start button.
-   *
-   * This helps satisfy mobile autoplay restrictions.
+   * Start the audio context from
+   * the user's Start button press.
    */
 
   audioContext =
@@ -314,21 +429,24 @@ async function startCamera() {
       window.webkitAudioContext
     )();
 
+
   await audioContext.resume();
 
 
   /*
-   * Keep the screen awake.
+   * Keep screen awake.
    */
 
   try {
 
-    if ("wakeLock" in navigator) {
+    if (
+      "wakeLock" in navigator
+    ) {
 
       wakeLock =
-        await navigator.wakeLock.request(
-          "screen"
-        );
+        await navigator
+          .wakeLock
+          .request("screen");
     }
 
   } catch (error) {
@@ -340,23 +458,32 @@ async function startCamera() {
   }
 
 
-  monitor.hidden = false;
+  monitor.hidden =
+    false;
 
-  $("#setup").hidden = true;
+  $("#setup").hidden =
+    true;
 
-  calibrateButton.disabled = false;
+  calibrateButton.disabled =
+    false;
 
-  running = true;
+  running =
+    true;
 
-  requestAnimationFrame(loop);
+
+  requestAnimationFrame(
+    loop
+  );
 }
 
 
 /*
- * Find the largest detected face.
+ * Find largest face.
  */
 
-function getLargestFace(result) {
+function getLargestFace(
+  result
+) {
 
   if (
     !result ||
@@ -368,38 +495,43 @@ function getLargestFace(result) {
   }
 
 
-  return result.detections.reduce(
-    (largest, current) => {
+  return result.detections
+    .reduce(
+      (largest, current) => {
 
-      if (!largest) {
-        return current;
-      }
-
-      const largestArea =
-        largest.boundingBox.width *
-        largest.boundingBox.height;
-
-      const currentArea =
-        current.boundingBox.width *
-        current.boundingBox.height;
+        if (!largest) {
+          return current;
+        }
 
 
-      return currentArea > largestArea
-        ? current
-        : largest;
+        const largestArea =
+          largest.boundingBox.width *
+          largest.boundingBox.height;
 
-    },
-    null
-  );
+
+        const currentArea =
+          current.boundingBox.width *
+          current.boundingBox.height;
+
+
+        return currentArea >
+          largestArea
+          ? current
+          : largest;
+
+      },
+      null
+    );
 }
 
 
 /*
- * Convert face width into a ratio
- * of the camera frame width.
+ * Face width ratio
  */
 
-function getFaceWidthRatio(face) {
+function getFaceWidthRatio(
+  face
+) {
 
   return (
     face.boundingBox.width /
@@ -413,6 +545,16 @@ function getFaceWidthRatio(face) {
  */
 
 function calibrate() {
+
+  /*
+   * Restore the large camera preview
+   * while calibrating.
+   */
+
+  monitor.classList.remove(
+    "calibrated"
+  );
+
 
   if (!currentFaceWidth) {
 
@@ -432,21 +574,38 @@ function calibrate() {
 
   localStorage.setItem(
     "safeFaceWidth",
-    String(safeFaceWidth)
+    String(
+      safeFaceWidth
+    )
   );
 
 
-  candidateSince = 0;
+  candidateSince =
+    0;
+
 
   stopAlarm();
+
+
+  /*
+   * Minimize camera after
+   * calibration is complete.
+   */
+
+  monitor.classList.add(
+    "calibrated"
+  );
 
 
   state.textContent =
     "CALIBRATED";
 
+
   debug.textContent =
     `Safe face width: ${
-      (safeFaceWidth * 100).toFixed(1)
+      (
+        safeFaceWidth * 100
+      ).toFixed(1)
     }%`;
 }
 
@@ -462,20 +621,21 @@ async function startAlarm() {
   }
 
 
-  alarmRunning = true;
+  alarmRunning =
+    true;
 
-  monitor.classList.add("alarm");
 
+  monitor.classList.add(
+    "alarm"
+  );
 
-  /*
-   * Custom recording
-   */
 
   if (alarmAudio) {
 
     try {
 
-      alarmAudio.currentTime = 0;
+      alarmAudio.currentTime =
+        0;
 
       await alarmAudio.play();
 
@@ -489,15 +649,13 @@ async function startAlarm() {
 
   } else {
 
-    /*
-     * Emergency fallback beep.
-     */
-
     startFallbackAlarm();
   }
 
 
-  if (navigator.vibrate) {
+  if (
+    navigator.vibrate
+  ) {
 
     navigator.vibrate([
       300,
@@ -508,9 +666,6 @@ async function startAlarm() {
     ]);
   }
 }
-
-
-let fallbackInterval = null;
 
 
 function startFallbackAlarm() {
@@ -535,10 +690,13 @@ function startFallbackAlarm() {
 
 
     const oscillator =
-      audioContext.createOscillator();
+      audioContext
+        .createOscillator();
+
 
     const gain =
-      audioContext.createGain();
+      audioContext
+        .createGain();
 
 
     oscillator.type =
@@ -550,6 +708,7 @@ function startFallbackAlarm() {
         900,
         now
       );
+
 
     oscillator.frequency
       .setValueAtTime(
@@ -563,11 +722,13 @@ function startFallbackAlarm() {
       now
     );
 
+
     gain.gain
       .exponentialRampToValueAtTime(
         0.32,
         now + 0.02
       );
+
 
     gain.gain
       .exponentialRampToValueAtTime(
@@ -576,14 +737,20 @@ function startFallbackAlarm() {
       );
 
 
-    oscillator.connect(gain);
+    oscillator.connect(
+      gain
+    );
+
 
     gain.connect(
       audioContext.destination
     );
 
 
-    oscillator.start(now);
+    oscillator.start(
+      now
+    );
+
 
     oscillator.stop(
       now + 0.36
@@ -592,6 +759,7 @@ function startFallbackAlarm() {
 
 
   beep();
+
 
   fallbackInterval =
     setInterval(
@@ -603,7 +771,9 @@ function startFallbackAlarm() {
 
 function stopAlarm() {
 
-  alarmRunning = false;
+  alarmRunning =
+    false;
+
 
   monitor.classList.remove(
     "alarm"
@@ -617,7 +787,8 @@ function stopAlarm() {
 
     alarmAudio.pause();
 
-    alarmAudio.currentTime = 0;
+    alarmAudio.currentTime =
+      0;
   }
 
 
@@ -627,11 +798,14 @@ function stopAlarm() {
       fallbackInterval
     );
 
-    fallbackInterval = null;
+    fallbackInterval =
+      null;
   }
 
 
-  if (navigator.vibrate) {
+  if (
+    navigator.vibrate
+  ) {
 
     navigator.vibrate(0);
   }
@@ -639,7 +813,7 @@ function stopAlarm() {
 
 
 /*
- * Distance logic
+ * Distance evaluation
  */
 
 function evaluateDistance(
@@ -651,17 +825,17 @@ function evaluateDistance(
     width;
 
 
-  /*
-   * No calibration yet.
-   */
-
   if (!safeFaceWidth) {
 
     state.textContent =
       "CALIBRATE";
 
+
     debug.textContent =
-      `Face ${(width * 100).toFixed(1)}% wide`;
+      `Face ${
+        (width * 100).toFixed(1)
+      }% wide`;
+
 
     stopAlarm();
 
@@ -670,12 +844,15 @@ function evaluateDistance(
 
 
   const multiplier =
-    Number(threshold.value) / 100;
+    Number(
+      threshold.value
+    ) / 100;
 
 
   const tooClose =
     width >=
-    safeFaceWidth * multiplier;
+    safeFaceWidth *
+    multiplier;
 
 
   if (tooClose) {
@@ -693,7 +870,9 @@ function evaluateDistance(
 
 
     const requiredDelay =
-      Number(delay.value);
+      Number(
+        delay.value
+      );
 
 
     if (
@@ -702,10 +881,13 @@ function evaluateDistance(
     ) {
 
       state.textContent =
-        "🚨 TOO CLOSE 🚨";
+        "TOO CLOSE";
+
 
       debug.textContent =
-        `Face ${(width * 100).toFixed(1)}% wide`;
+        `Face ${
+          (width * 100).toFixed(1)
+        }% wide`;
 
 
       startAlarm();
@@ -713,21 +895,26 @@ function evaluateDistance(
     } else {
 
       state.textContent =
-        "GET BACK…";
+        "GET BACK";
 
 
       debug.textContent =
         `Alarm in ${
           Math.max(
             0,
-            (requiredDelay - elapsed) / 1000
+            (
+              requiredDelay -
+              elapsed
+            ) / 1000
           ).toFixed(1)
         }s`;
     }
 
   } else {
 
-    candidateSince = 0;
+    candidateSince =
+      0;
+
 
     stopAlarm();
 
@@ -735,8 +922,11 @@ function evaluateDistance(
     state.textContent =
       "SAFE";
 
+
     debug.textContent =
-      `Face ${(width * 100).toFixed(1)}% wide`;
+      `Face ${
+        (width * 100).toFixed(1)
+      }% wide`;
   }
 }
 
@@ -754,7 +944,8 @@ function loop(timestamp) {
 
   if (
     video.readyState >= 2 &&
-    video.currentTime !== lastVideoTime
+    video.currentTime !==
+      lastVideoTime
   ) {
 
     lastVideoTime =
@@ -762,13 +953,14 @@ function loop(timestamp) {
 
 
     /*
-     * Don't hammer the G35.
-     *
-     * Approximately 8 detections/second.
+     * Approximately 8 detections
+     * per second.
      */
 
     if (
-      timestamp - lastDetection >= 120
+      timestamp -
+      lastDetection >=
+      120
     ) {
 
       lastDetection =
@@ -785,13 +977,17 @@ function loop(timestamp) {
 
 
         const face =
-          getLargestFace(result);
+          getLargestFace(
+            result
+          );
 
 
         if (face) {
 
           const width =
-            getFaceWidthRatio(face);
+            getFaceWidthRatio(
+              face
+            );
 
 
           evaluateDistance(
@@ -801,15 +997,19 @@ function loop(timestamp) {
 
         } else {
 
-          currentFaceWidth = null;
+          currentFaceWidth =
+            null;
 
-          candidateSince = 0;
+          candidateSince =
+            0;
+
 
           stopAlarm();
 
 
           state.textContent =
             "NO FACE";
+
 
           debug.textContent =
             "No face detected";
@@ -818,10 +1018,13 @@ function loop(timestamp) {
 
       } catch (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
+
 
         debug.textContent =
-          "Detection error — check console.";
+          "Detection error.";
       }
     }
   }
@@ -839,7 +1042,9 @@ function loop(timestamp) {
 
 async function stopMonitoring() {
 
-  running = false;
+  running =
+    false;
+
 
   stopAlarm();
 
@@ -849,14 +1054,17 @@ async function stopMonitoring() {
     stream
       .getTracks()
       .forEach(
-        track => track.stop()
+        track =>
+          track.stop()
       );
 
-    stream = null;
+    stream =
+      null;
   }
 
 
-  video.srcObject = null;
+  video.srcObject =
+    null;
 
 
   if (wakeLock) {
@@ -867,15 +1075,31 @@ async function stopMonitoring() {
 
     } catch (_) {}
 
-    wakeLock = null;
+    wakeLock =
+      null;
   }
 
 
-  monitor.hidden = true;
+  monitor.hidden =
+    true;
 
-  $("#setup").hidden = false;
 
-  calibrateButton.disabled = true;
+  monitor.classList.remove(
+    "calibrated"
+  );
+
+
+  $("#setup").hidden =
+    false;
+
+
+  calibrateButton.disabled =
+    true;
+
+
+  startButton.disabled =
+    false;
+
 
   status.textContent =
     "Monitoring stopped.";
@@ -883,14 +1107,15 @@ async function stopMonitoring() {
 
 
 /*
- * Start button
+ * Start
  */
 
 startButton.addEventListener(
   "click",
   async () => {
 
-    startButton.disabled = true;
+    startButton.disabled =
+      true;
 
 
     try {
@@ -901,7 +1126,9 @@ startButton.addEventListener(
 
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        error
+      );
 
 
       status.textContent =
@@ -910,11 +1137,16 @@ startButton.addEventListener(
         }`;
 
 
-      startButton.disabled = false;
+      startButton.disabled =
+        false;
     }
   }
 );
 
+
+/*
+ * Calibration buttons
+ */
 
 calibrateButton.addEventListener(
   "click",
@@ -928,6 +1160,10 @@ recalibrateButton.addEventListener(
 );
 
 
+/*
+ * Stop
+ */
+
 stopButton.addEventListener(
   "click",
   stopMonitoring
@@ -935,7 +1171,7 @@ stopButton.addEventListener(
 
 
 /*
- * Load previously saved alarm.
+ * Load saved alarm.
  */
 
 (async () => {
@@ -945,9 +1181,13 @@ stopButton.addEventListener(
     const saved =
       await loadAlarm();
 
+
     if (saved) {
 
-      setAlarmAudio(saved);
+      setAlarmAudio(
+        saved,
+        "Saved alarm"
+      );
     }
 
   } catch (error) {
@@ -962,7 +1202,7 @@ stopButton.addEventListener(
 
 
 /*
- * PWA service worker
+ * Service worker
  */
 
 if (
@@ -971,5 +1211,7 @@ if (
 
   navigator.serviceWorker
     .register("./sw.js")
-    .catch(console.error);
+    .catch(
+      console.error
+    );
 }
