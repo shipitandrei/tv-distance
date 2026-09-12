@@ -2,19 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover"
   >
 
-  <meta name="theme-color" content="#080808">
   <meta
-    name="description"
-    content="Camera-based TV distance alarm"
+    name="theme-color"
+    content="#080808"
   >
 
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 
   <title>TV Distance Alarm</title>
 </head>
@@ -25,58 +32,48 @@
 
     <section class="panel">
 
-      <h1>📺 TV Distance Alarm</h1>
+      <h1>TV Distance Alarm</h1>
 
       <p class="intro">
         Keep the phone pointed toward the TV.
         When someone's face gets too large,
-        your alarm will go off.
+        the alarm will go off.
       </p>
 
 
-      <!-- ALARM AUDIO -->
-
       <section class="alarm-picker">
 
-        <h2>🔊 Alarm sound</h2>
+        <h2>Alarm sound</h2>
 
-        <p class="muted">
-          Choose the audio recording you want the phone
-          to play when someone gets too close.
+        <p>
+          Choose the audio recording you want
+          the phone to play when someone gets
+          too close.
         </p>
 
-        <label
-          for="alarmFile"
-          class="choose-button"
-        >
-          🎤 Choose Alarm Audio
+        <label for="alarmFile">
+          Choose Alarm Audio
         </label>
 
-      <input
-  id="alarmFile"
-  type="file"
-  accept=".mp3,.m4a,.wav,.ogg,.aac,.opus,.webm,.mp4"
-  hidden
->
-
-        <div
-          id="audioStatus"
-          class="audio-status"
+        <input
+          id="alarmFile"
+          type="file"
+          hidden
         >
-          No alarm selected
-        </div>
+
+        <p id="audioStatus">
+          No alarm selected.
+        </p>
 
       </section>
 
-
-      <!-- SETTINGS -->
 
       <section class="settings">
 
         <label class="setting">
 
           <span>
-            Trigger sensitivity
+            Trigger sensitivity:
             <b id="thresholdValue">120%</b>
           </span>
 
@@ -89,7 +86,8 @@
           >
 
           <small>
-            Higher = they can get closer before the alarm triggers.
+            Higher means the person can get closer
+            before the alarm triggers.
           </small>
 
         </label>
@@ -98,7 +96,7 @@
         <label class="setting">
 
           <span>
-            Alarm delay
+            Alarm delay:
             <b id="delayValue">1.0s</b>
           </span>
 
@@ -112,7 +110,8 @@
           >
 
           <small>
-            Prevents the alarm from triggering from a brief detection.
+            How long someone must remain too close
+            before the alarm starts.
           </small>
 
         </label>
@@ -120,33 +119,27 @@
       </section>
 
 
-      <!-- CONTROLS -->
-
       <div class="controls">
 
         <button
           id="start"
-          class="primary"
         >
-          ▶ Start Monitoring
+          Start Monitoring
         </button>
 
         <button
           id="calibrate"
           disabled
         >
-          🎯 Calibrate
+          Calibrate
         </button>
 
       </div>
 
 
-      <div
-        id="status"
-        class="status"
-      >
+      <p id="status">
         Ready.
-      </div>
+      </p>
 
 
       <p class="instructions">
@@ -161,8 +154,6 @@
 
   </main>
 
-
-  <!-- MONITOR -->
 
   <section
     id="monitor"
@@ -183,18 +174,12 @@
 
     <div class="hud">
 
-      <div
-        id="state"
-        class="state"
-      >
-        STARTING…
+      <div id="state">
+        STARTING...
       </div>
 
-      <div
-        id="debug"
-        class="debug"
-      >
-        Loading…
+      <div id="debug">
+        Loading...
       </div>
 
     </div>
@@ -203,11 +188,11 @@
     <div class="bottom">
 
       <button id="recalibrate">
-        🎯 Recalibrate
+        Recalibrate
       </button>
 
       <button id="stop">
-        ■ Stop
+        Stop
       </button>
 
     </div>
