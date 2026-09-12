@@ -423,14 +423,22 @@ async function startCamera() {
    * the user's Start button press.
    */
 
+  try {
   audioContext =
     new (
       window.AudioContext ||
       window.webkitAudioContext
     )();
 
-
   await audioContext.resume();
+} catch (error) {
+  console.warn(
+    "Web Audio unavailable:",
+    error
+  );
+
+  audioContext = null;
+}
 
 
   /*
