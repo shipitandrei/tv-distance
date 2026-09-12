@@ -1,1 +1,125 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#090909"><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css"><title>TV Distance Alarm</title></head><body><main id="setup" class="panel"><h1>TV Distance Alarm</h1><p>Point the phone at the viewing area. Stand at the acceptable distance, calibrate, then let the alarm do its job.</p><button id="start">Start camera</button><button id="calibrate" disabled>Calibrate safe distance</button><label>Alarm threshold <strong id="thresholdValue">120%</strong><input id="threshold" type="range" min="105" max="180" value="120"></label><p id="status">Camera not started.</p></main><section id="monitor" hidden><video id="video" autoplay playsinline muted></video><div id="overlay"><div id="state">STARTING…</div><div id="debug">No face detected</div></div><div class="controls"><button id="recalibrate">Recalibrate</button><button id="stop">Stop</button></div></section><script type="module" src="app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="Camera-based TV distance alarm">
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+
+  <title>TV Distance Alarm</title>
+</head>
+
+<body>
+  <main>
+
+    <section id="setup" class="panel">
+      <h1>TV Distance Alarm</h1>
+
+      <p>
+        Point the phone at the viewing area. The app watches face size
+        and plays your alarm when someone gets too close.
+      </p>
+
+      <label class="file">
+        <span>Alarm audio</span>
+        <input id="alarmFile" type="file" accept="audio/*">
+      </label>
+
+      <p id="audioStatus" class="muted">
+        No custom alarm selected. A built-in beep will be used.
+      </p>
+
+      <div class="row">
+        <button id="start" class="primary">
+          Start monitoring
+        </button>
+
+        <button id="calibrate" disabled>
+          Calibrate
+        </button>
+      </div>
+
+      <label class="setting">
+        <span>
+          Trigger sensitivity:
+          <b id="thresholdValue">120%</b>
+        </span>
+
+        <input
+          id="threshold"
+          type="range"
+          min="105"
+          max="180"
+          value="120"
+        >
+      </label>
+
+      <label class="setting">
+        <span>
+          Alarm delay:
+          <b id="delayValue">1.0s</b>
+        </span>
+
+        <input
+          id="delay"
+          type="range"
+          min="0"
+          max="3000"
+          step="100"
+          value="1000"
+        >
+      </label>
+
+      <p id="status" class="status">
+        Ready.
+      </p>
+
+      <p class="muted">
+        Stand at the closest distance that is still acceptable for
+        TV viewing, then calibrate.
+      </p>
+    </section>
+
+
+    <section id="monitor" class="monitor" hidden>
+
+      <video
+        id="video"
+        autoplay
+        playsinline
+        muted
+      ></video>
+
+      <div id="flash"></div>
+
+      <div class="hud">
+        <div id="state" class="state">
+          STARTING…
+        </div>
+
+        <div id="debug" class="debug">
+          Loading…
+        </div>
+      </div>
+
+      <div class="bottom">
+        <button id="recalibrate">
+          Recalibrate
+        </button>
+
+        <button id="stop">
+          Stop
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
