@@ -102,19 +102,7 @@ button {
  */
 
 .monitor.calibrated #video {
-  position: absolute;
-
-  width: 160px;
-  height: 120px;
-
-  top: 12px;
-  right: 12px;
-
-  border-radius: 10px;
-
-  object-fit: cover;
-
-  z-index: 5;
+  display: none;
 }
 
 
